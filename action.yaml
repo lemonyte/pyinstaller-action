@@ -58,37 +58,42 @@ runs:
       shell: bash
       run: |
         mkdir --parents ./.upx
+        UPX_RELEASES_URL="https://api.github.com/repos/upx/upx/releases"
         if [ "${{ runner.os }}" == "Linux" ] || [ "${{ runner.os }}" == "macOS" ]; then
+          DOWNLOAD_FORMAT="tar.xz"
           if [ "${{ runner.arch }}" == "X64" ]; then
-            UPX_PLATFORM="amd64_linux.tar.xz"
+            UPX_PLATFORM="amd64_linux"
           elif [ "${{ runner.arch }}" == "ARM64" ]; then
-            UPX_PLATFORM="arm64_linux.tar.xz"
+            UPX_PLATFORM="arm64_linux"
           elif [ "${{ runner.arch }}" == "ARM" ]; then
-            UPX_PLATFORM="arm_linux.tar.xz"
+            UPX_PLATFORM="arm_linux"
           else
             echo "::warning::Unsupported architecture ${{ runner.os }}-${{ runner.arch }}, skipping UPX installation."
             exit 0
           fi
         elif [ "${{ runner.os }}" == "Windows" ]; then
+          DOWNLOAD_FORMAT="zip"
           if [ "${{ runner.arch }}" == "X64" ]; then
-            UPX_PLATFORM="win64.zip"
+            UPX_PLATFORM="win64"
           elif [ "${{ runner.arch }}" == "X86" ]; then
-            UPX_PLATFORM="win32.zip"
+            UPX_PLATFORM="win32"
           else
             echo "::warning::Unsupported architecture ${{ runner.os }}-${{ runner.arch }}, skipping UPX installation."
             exit 0
           fi
         fi
         if [ "${{ inputs.upx-version }}" == "latest" ]; then
-          UPX_RELEASES_URL="https://api.github.com/repos/upx/upx/releases"
           LATEST_RELEASE=$(curl "${UPX_RELEASES_URL}/latest" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
-          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${LATEST_RELEASE}/upx-${LATEST_RELEASE}-${UPX_PLATFORM}"
+          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${LATEST_RELEASE}/upx-${LATEST_RELEASE}-${UPX_PLATFORM}.${DOWNLOAD_FORMAT}"
         else
-          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${{ inputs.upx-version }}/upx-${{ inputs.upx-version }}-${UPX_PLATFORM}"
+          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${{ inputs.upx-version }}/upx-${{ inputs.upx-version }}-${UPX_PLATFORM}.${DOWNLOAD_FORMAT}"
         fi
-        curl --location --remote-name $UPX_DOWNLOAD_URL
-        ls
-        tar --extract --directory ./.upx --file upx*
+        curl --location --output ./.upx/archive $UPX_DOWNLOAD_URL
+        if [ $DOWNLOAD_FORMAT == "tar.xz" ]; then
+          tar --extract --directory ./.upx --file ./.upx/archive
+        elif [ $DOWNLOAD_FORMAT == "zip" ]; then
+          unzip -d ./.upx ./.upx/archive
+        fi
 
     - name: Install project requirements
       if: inputs.requirements != ''
