@@ -57,7 +57,7 @@ runs:
       if: inputs.upx == 'true'
       shell: bash
       run: |
-        mkdir --parents ./.upx
+        mkdir -p ./.upx
         UPX_RELEASES_URL="https://api.github.com/repos/upx/upx/releases"
         if [ "${{ runner.os }}" == "Linux" ] || [ "${{ runner.os }}" == "macOS" ]; then
           DOWNLOAD_FORMAT="tar.xz"
