@@ -33,8 +33,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build with PyInstaller
-        uses: lemonyte/pyinstaller-action
-
+        uses: lemonyte/pyinstaller-action@main
+        with:
+          spec: main.spec
 ```
 
 ## Inputs
