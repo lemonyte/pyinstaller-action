@@ -60,7 +60,7 @@ runs:
         mkdir -p ./.upx
         UPX_RELEASES_URL="https://api.github.com/repos/upx/upx/releases"
         if [ "${{ runner.os }}" == "Linux" ] || [ "${{ runner.os }}" == "macOS" ]; then
-          DOWNLOAD_FORMAT="tar.xz"
+          ARCHIVE_FORMAT="tar.xz"
           if [ "${{ runner.arch }}" == "X64" ]; then
             UPX_PLATFORM="amd64_linux"
           elif [ "${{ runner.arch }}" == "ARM64" ]; then
@@ -72,7 +72,7 @@ runs:
             exit 0
           fi
         elif [ "${{ runner.os }}" == "Windows" ]; then
-          DOWNLOAD_FORMAT="zip"
+          ARCHIVE_FORMAT="zip"
           if [ "${{ runner.arch }}" == "X64" ]; then
             UPX_PLATFORM="win64"
           elif [ "${{ runner.arch }}" == "X86" ]; then
@@ -84,17 +84,17 @@ runs:
         fi
         if [ "${{ inputs.upx-version }}" == "latest" ]; then
           LATEST_RELEASE=$(curl --silent "${UPX_RELEASES_URL}/latest" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
-          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${LATEST_RELEASE}/upx-${LATEST_RELEASE}-${UPX_PLATFORM}.${DOWNLOAD_FORMAT}"
+          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${LATEST_RELEASE}/upx-${LATEST_RELEASE}-${UPX_PLATFORM}.${ARCHIVE_FORMAT}"
         else
-          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${{ inputs.upx-version }}/upx-${{ inputs.upx-version }}-${UPX_PLATFORM}.${DOWNLOAD_FORMAT}"
+          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${{ inputs.upx-version }}/upx-${{ inputs.upx-version }}-${UPX_PLATFORM}.${ARCHIVE_FORMAT}"
         fi
-        curl --silent --location --output ./.upx/archive $UPX_DOWNLOAD_URL
+        curl --silent --location --output "./.upx/upx.${ARCHIVE_FORMAT}" $UPX_DOWNLOAD_URL
         ls -la .
         ls -la ./.upx
-        if [ $DOWNLOAD_FORMAT == "tar.xz" ]; then
-          tar --extract --xz --directory ./.upx --file ./.upx/archive
-        elif [ $DOWNLOAD_FORMAT == "zip" ]; then
-          unzip -d ./.upx ./.upx/archive
+        if [ $ARCHIVE_FORMAT == "tar.xz" ]; then
+          tar --extract --xz --directory ./.upx --file "./.upx/upx.${ARCHIVE_FORMAT}"
+        elif [ $ARCHIVE_FORMAT == "zip" ]; then
+          unzip -d ./.upx "./.upx/upx.${ARCHIVE_FORMAT}"
         fi
 
     - name: Install project requirements
