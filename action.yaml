@@ -47,7 +47,7 @@ runs:
       shell: bash
       run: |
         python -m pip install --upgrade pip wheel setuptools
-        if [[ "${{ inputs.pyinstaller-version }}" == "latest" ]]; then
+        if [ "${{ inputs.pyinstaller-version }}" == "latest" ]; then
           python -m pip install --upgrade pyinstaller
         else
           python -m pip install pyinstaller==${{ inputs.pyinstaller-version }}
@@ -58,28 +58,28 @@ runs:
       shell: bash
       run: |
         mkdir --parents ./.upx
-        if [[ "${{ runner.os }}" == "Linux" ]] || [[ "${{ runner.os }}" == "macOS" ]]; then
-          if [[ "${{ runner.arch }}" == "X64" ]]; then
+        if [ "${{ runner.os }}" == "Linux" ] || [ "${{ runner.os }}" == "macOS" ]; then
+          if [ "${{ runner.arch }}" == "X64" ]; then
             UPX_PLATFORM="amd64_linux.tar.xz"
-          elif [[ "${{ runner.arch }}" == "ARM64" ]]; then
+          elif [ "${{ runner.arch }}" == "ARM64" ]; then
             UPX_PLATFORM="arm64_linux.tar.xz"
-          elif [[ "${{ runner.arch }}" == "ARM" ]]; then
+          elif [ "${{ runner.arch }}" == "ARM" ]; then
             UPX_PLATFORM="arm_linux.tar.xz"
           else
             echo "::warning::Unsupported architecture ${{ runner.os }}-${{ runner.arch }}, skipping UPX installation."
             exit 0
           fi
-        elif [[ "${{ runner.os }}" == "Windows" ]]; then
-          if [[ "${{ runner.arch }}" == "X64" ]]; then
+        elif [ "${{ runner.os }}" == "Windows" ]; then
+          if [ "${{ runner.arch }}" == "X64" ]; then
             UPX_PLATFORM="win64.zip"
-          elif [[ "${{ runner.arch }}" == "X86" ]]; then
+          elif [ "${{ runner.arch }}" == "X86" ]; then
             UPX_PLATFORM="win32.zip"
           else
             echo "::warning::Unsupported architecture ${{ runner.os }}-${{ runner.arch }}, skipping UPX installation."
             exit 0
           fi
         fi
-        if [[ "${{ inputs.upx-version }}" == "latest" ]]; then
+        if [ "${{ inputs.upx-version }}" == "latest" ]; then
           UPX_RELEASES_URL="https://api.github.com/repos/upx/upx/releases"
           LATEST_RELEASE=$(curl "${UPX_RELEASES_URL}/latest" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
           UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${LATEST_RELEASE}/upx-${LATEST_RELEASE}-${UPX_PLATFORM}"
