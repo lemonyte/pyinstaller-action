@@ -89,6 +89,7 @@ runs:
           UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${{ inputs.upx-version }}/upx-${{ inputs.upx-version }}-${UPX_PLATFORM}.${DOWNLOAD_FORMAT}"
         fi
         curl --location --output ./.upx/archive $UPX_DOWNLOAD_URL
+        tree
         if [ $DOWNLOAD_FORMAT == "tar.xz" ]; then
           tar --extract --directory ./.upx --file ./.upx/archive
         elif [ $DOWNLOAD_FORMAT == "zip" ]; then
