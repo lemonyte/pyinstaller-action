@@ -1,0 +1,106 @@
+name: PyInstaller Build
+author: lemonyte
+description: Package a Python application into a standalone executable using PyInstaller.
+branding:
+  icon: package
+  color: green
+
+inputs:
+  spec:
+    description: Path to your spec file.
+    required: true
+  requirements:
+    description: Path to your requirements file, default is ./requirements.txt.
+    default: ./requirements.txt
+  python-version:
+    description: Python version to use, default is 3.x.
+    default: 3.x
+  python-arch:
+    description: Python architecture to use, default is x64.
+    default: x64
+  pyinstaller-version:
+    description: PyInstaller version to use, default is latest.
+    default: latest
+  upx: 
+    description: Whether to compress the executable using UPX, default is true.
+    default: true
+  upx-version:
+    description: UPX version to use, default is latest.
+    default: latest
+  dist:
+    description: Where to store generated executables, default is ./dist.
+    default: ./dist
+  artifact:
+    description: Name of the uploaded artifact, default is executables.
+    default: executables
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+        architecture: ${{ inputs.python-arch }}
+
+    - name: Install PyInstaller
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip wheel setuptools
+        if [[ "${{ inputs.pyinstaller-version }}" == "latest" ]]; then
+          python -m pip install --upgrade pyinstaller
+        else
+          python -m pip install pyinstaller==${{ inputs.pyinstaller-version }}
+        fi
+
+    - name: Install UPX
+      if: inputs.upx == 'true'
+      shell: bash
+      run: |
+        if [[ "${{ runner.os }}" == "Linux" ]] || [[ "${{ runner.os }}" == "macOS" ]]; then
+          if [[ "${{ runner.arch }}" == "X64" ]]; then
+            UPX_PLATFORM="amd64_linux.tar.xz"
+          elif [[ "${{ runner.arch }}" == "ARM64" ]]; then
+            UPX_PLATFORM="arm64_linux.tar.xz"
+          elif [[ "${{ runner.arch }}" == "ARM" ]]; then
+            UPX_PLATFORM="arm_linux.tar.xz"
+          else
+            echo "::warning::Unsupported architecture ${{ runner.os }}-${{ runner.arch }}, skipping UPX installation."
+            exit 0
+          fi
+        elif [[ "${{ runner.os }}" == "Windows" ]]; then
+          if [[ "${{ runner.arch }}" == "X64" ]]; then
+            UPX_PLATFORM="win64.zip"
+          elif [[ "${{ runner.arch }}" == "X86" ]]; then
+            UPX_PLATFORM="win32.zip"
+          else
+            echo "::warning::Unsupported architecture ${{ runner.os }}-${{ runner.arch }}, skipping UPX installation."
+            exit 0
+          fi
+        fi
+        if [[ "${{ inputs.upx-version }}" == "latest" ]]; then
+          UPX_RELEASES_URL="https://api.github.com/repos/upx/upx/releases"
+          LATEST_RELEASE=$(curl "${UPX_RELEASES_URL}/latest" | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
+          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${LATEST_RELEASE}/upx-${LATEST_RELEASE}-${UPX_PLATFORM}"
+        else
+          UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${{ inputs.upx-version }}/upx-${{ inputs.upx-version }}-${UPX_PLATFORM}"
+        fi
+        curl --location --output ./.upx/archive $UPX_DOWNLOAD_URL
+        tar --extract --directory ./.upx --file ./.upx/archive
+
+    - name: Install project requirements
+      if: inputs.requirements != ''
+      shell: bash
+      run: >
+        (test -f ${{ inputs.requirements }} && python -m pip install -r ${{ inputs.requirements }})
+        || echo "::notice::Requirements file does not exist, skipping dependency installation."
+
+    - name: Build executable
+      shell: bash
+      run: pyinstaller --clean --noconfirm --dist ${{ inputs.dist }} --upx-dir ./.upx ${{ inputs.spec }}
+
+    - name: Upload Executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact }}
+        path: ${{ inputs.dist }}
