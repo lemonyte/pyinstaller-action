@@ -87,7 +87,8 @@ runs:
           UPX_DOWNLOAD_URL="${UPX_RELEASES_URL}/download/v${{ inputs.upx-version }}/upx-${{ inputs.upx-version }}-${UPX_PLATFORM}"
         fi
         curl --location --remote-name $UPX_DOWNLOAD_URL
-        tar --extract --directory ./.upx --file ./.upx/*
+        ls
+        tar --extract --directory ./.upx --file upx*
 
     - name: Install project requirements
       if: inputs.requirements != ''
