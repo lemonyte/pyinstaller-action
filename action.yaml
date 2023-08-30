@@ -57,6 +57,7 @@ runs:
       if: inputs.upx == 'true'
       shell: bash
       run: |
+        mkdir --parents ./.upx
         if [[ "${{ runner.os }}" == "Linux" ]] || [[ "${{ runner.os }}" == "macOS" ]]; then
           if [[ "${{ runner.arch }}" == "X64" ]]; then
             UPX_PLATFORM="amd64_linux.tar.xz"
